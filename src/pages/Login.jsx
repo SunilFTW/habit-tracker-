@@ -26,12 +26,18 @@ export default function Login() {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        // Supabase might require email confirmation, but for now we assume success
+        
+        // If email confirmation is enabled in Supabase, session will be null
+        if (!data.session) {
+          setError('Please check your email for a confirmation link, or disable Email Confirmations in Supabase settings.');
+          setLoading(false);
+          return;
+        }
       }
       navigate('/app');
     } catch (err) {
