@@ -8,25 +8,25 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard', section: 'core' },
-  { path: '/discipline', icon: Target, label: 'Discipline', section: 'core' },
-  { path: '/hard-thing', icon: Zap, label: 'Hard Thing', section: 'core' },
-  { path: '/fitness', icon: Dumbbell, label: 'Fitness', section: 'track' },
-  { path: '/growth', icon: Palette, label: 'Growth', section: 'track' },
-  { path: '/life', icon: ClipboardList, label: 'Life', section: 'track' },
-  { path: '/skincare', icon: Sparkles, label: 'Skincare', section: 'care' },
-  { path: '/haircare', icon: Scissors, label: 'Haircare', section: 'care' },
-  { path: '/future-self', icon: Eye, label: 'Future Me', section: 'reflect' },
-  { path: '/wins', icon: Trophy, label: 'Wins', section: 'reflect' },
-  { path: '/settings', icon: Settings, label: 'Settings', section: 'system' },
+  { path: '/app', icon: LayoutDashboard, label: 'Dashboard', section: 'core' },
+  { path: '/app/discipline', icon: Target, label: 'Discipline', section: 'core' },
+  { path: '/app/hard-thing', icon: Zap, label: 'Hard Thing', section: 'core' },
+  { path: '/app/fitness', icon: Dumbbell, label: 'Fitness', section: 'track' },
+  { path: '/app/growth', icon: Palette, label: 'Growth', section: 'track' },
+  { path: '/app/life', icon: ClipboardList, label: 'Life', section: 'track' },
+  { path: '/app/skincare', icon: Sparkles, label: 'Skincare', section: 'care' },
+  { path: '/app/haircare', icon: Scissors, label: 'Haircare', section: 'care' },
+  { path: '/app/future-self', icon: Eye, label: 'Future Me', section: 'reflect' },
+  { path: '/app/wins', icon: Trophy, label: 'Wins', section: 'reflect' },
+  { path: '/app/settings', icon: Settings, label: 'Settings', section: 'system' },
 ];
 
 const mobileItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Home' },
-  { path: '/discipline', icon: Target, label: 'Discipline' },
-  { path: '/hard-thing', icon: Zap, label: 'Hard Thing' },
-  { path: '/fitness', icon: Dumbbell, label: 'Fitness' },
-  { path: '/wins', icon: Trophy, label: 'Wins' },
+  { path: '/app', icon: LayoutDashboard, label: 'Home' },
+  { path: '/app/discipline', icon: Target, label: 'Discipline' },
+  { path: '/app/hard-thing', icon: Zap, label: 'Hard Thing' },
+  { path: '/app/fitness', icon: Dumbbell, label: 'Fitness' },
+  { path: '/app/wins', icon: Trophy, label: 'Wins' },
 ];
 
 const sections = {
@@ -85,7 +85,7 @@ export default function Layout({ children }) {
                   key={item.path}
                   to={item.path}
                   className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                  end={item.path === '/'}
+                  end={item.path === '/app'}
                 >
                   <item.icon className="nav-icon" />
                   <span className="nav-label">{item.label}</span>
@@ -108,7 +108,7 @@ export default function Layout({ children }) {
             key={item.path}
             to={item.path}
             className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}
-            end={item.path === '/'}
+            end={item.path === '/app'}
           >
             <item.icon className="nav-icon" />
             <span>{item.label}</span>
