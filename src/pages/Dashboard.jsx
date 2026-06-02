@@ -242,7 +242,7 @@ export default function Dashboard() {
             <div style={{ fontSize: 'var(--fs-lg)', fontWeight: 'var(--fw-bold)' }}>
               {disciplineCompleted}/{disciplineHabits.length} habits
             </div>
-            <Link to="/discipline" style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: 'var(--space-2)' }}>
+            <Link to="/app/discipline" style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: 'var(--space-2)' }}>
               View all <ArrowRight size={14} />
             </Link>
           </div>
@@ -320,7 +320,7 @@ export default function Dashboard() {
               </span>
             </>
           ) : (
-            <Link to="/hard-thing" style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Link to="/app/hard-thing" style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
               Set today's challenge <ArrowRight size={14} />
             </Link>
           )}
@@ -388,7 +388,7 @@ export default function Dashboard() {
                 </div>
               </>
             ) : (
-              <Link to="/future-self" style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Link to="/app/future-self" style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 Write to your future self <ArrowRight size={14} />
               </Link>
             )}

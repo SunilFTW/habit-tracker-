@@ -137,7 +137,7 @@ export default function Layout({ children }) {
           </NavLink>
         ))}
         <NavLink
-          to="/settings"
+          to="/app/settings"
           className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}
         >
           <MoreHorizontal className="nav-icon" />
