@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
   LayoutDashboard, Dumbbell, Palette, Target, Sparkles,
-  Scissors, ClipboardList, Zap, Eye, Trophy, Settings, MoreHorizontal
+  Scissors, ClipboardList, Zap, Eye, Trophy, Settings, MoreHorizontal, LogOut
 } from 'lucide-react';
 
 const navItems = [
@@ -94,6 +94,28 @@ export default function Layout({ children }) {
             </div>
           ))}
         </nav>
+
+        <div className="account-manager">
+          <div className="account-info">
+            <div className="account-avatar">
+              {currentUser?.email?.charAt(0).toUpperCase()}
+            </div>
+            <div className="account-details">
+              <span className="account-email">{currentUser?.email}</span>
+              <span className="account-status">Pro Plan</span>
+            </div>
+          </div>
+          <button 
+            className="logout-btn"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              window.location.href = '/';
+            }}
+          >
+            <LogOut size={16} />
+            <span>Log Out</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}

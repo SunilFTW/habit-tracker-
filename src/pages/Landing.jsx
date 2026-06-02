@@ -1,10 +1,12 @@
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { ArrowRight, Activity, Brain, Target, Shield, Zap } from 'lucide-react';
 import './Landing.css';
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   return (
     <div className="landing-page">
@@ -15,12 +17,20 @@ export default function Landing() {
           <span style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>1% OS</span>
         </div>
         <div className="landing-nav-links">
-          <button onClick={() => navigate('/login')} className="btn btn-ghost">
-            Log In
-          </button>
-          <button onClick={() => navigate('/login')} className="btn" style={{ background: '#fff', color: '#000' }}>
-            Get Started
-          </button>
+          {currentUser ? (
+            <button onClick={() => navigate('/app')} className="btn" style={{ background: '#fff', color: '#000' }}>
+              Dashboard
+            </button>
+          ) : (
+            <>
+              <button onClick={() => navigate('/login')} className="btn btn-ghost">
+                Log In
+              </button>
+              <button onClick={() => navigate('/login')} className="btn" style={{ background: '#fff', color: '#000' }}>
+                Get Started
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
