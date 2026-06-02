@@ -1,0 +1,102 @@
+.landing-page {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.landing-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.landing-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.landing-nav-logo-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--accent-primary);
+  color: #000;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--fw-bold);
+}
+
+.landing-nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.landing-hero {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 8rem var(--space-4);
+  text-align: center;
+}
+
+.landing-title {
+  font-size: clamp(3rem, 8vw, 4.5rem);
+  font-weight: var(--fw-extrabold);
+  letter-spacing: -0.04em;
+  margin-bottom: var(--space-4);
+  background: linear-gradient(135deg, #fff 0%, #888 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.landing-subtitle {
+  font-size: var(--fs-lg);
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto var(--space-8);
+}
+
+.landing-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.landing-cta-btn {
+  font-size: var(--fs-lg);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-xl);
+}
+
+.landing-cta-text {
+  font-size: var(--fs-sm);
+  color: var(--text-tertiary);
+}
+
+.landing-features {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-4) 8rem;
+}
+
+.feature-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background-color: var(--glass-bg);
+  color: var(--accent-primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+  transition: transform var(--transition-base);
+}
+
+.card:hover .feature-icon-wrapper {
+  transform: scale(1.1);
+}
