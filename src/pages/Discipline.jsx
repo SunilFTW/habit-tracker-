@@ -39,26 +39,26 @@ export default function Discipline() {
       .select('*')
       .eq('user_id', currentUser.id)
       .eq('category', 'discipline')
-      .eq('isArchived', false)
-      .order('order');
+      .eq('is_archived', false)
+      .order('sort_order');
     if (habitsData) setHabits(habitsData);
 
     const { data: todayLogsData } = await supabase
-      .from('dailyLogs')
+      .from('daily_logs')
       .select('*')
       .eq('user_id', currentUser.id)
       .eq('date', today);
     if (todayLogsData) setTodayLogs(todayLogsData);
 
     const { data: monthLogsData } = await supabase
-      .from('dailyLogs')
+      .from('daily_logs')
       .select('*')
       .eq('user_id', currentUser.id)
       .in('date', last30);
     if (monthLogsData) setMonthLogs(monthLogsData);
   }
 
-  const completedIds = new Set(todayLogs.filter(l => l.completed).map(l => l.habitId));
+  const completedIds = new Set(todayLogs.filter(l => l.completed).map(l => l.habit_id));
   const completed = habits.filter(h => completedIds.has(h.id)).length;
   const score = habits.length > 0 ? Math.round((completed / habits.length) * 100) : 0;
 
@@ -68,19 +68,19 @@ export default function Discipline() {
     return completed > 0 ? '🔥' : '—';
   })();
 
-  const isEliteDay = habits.filter(h => h.isMandatory).length > 0 &&
-    habits.filter(h => h.isMandatory).every(h => completedIds.has(h.id));
+  const isEliteDay = habits.filter(h => h.is_mandatory).length > 0 &&
+    habits.filter(h => h.is_mandatory).every(h => completedIds.has(h.id));
 
   async function toggleHabit(habitId) {
     if (!currentUser) return;
-    const existing = todayLogs.find(l => l.habitId === habitId);
+    const existing = todayLogs.find(l => l.habit_id === habitId);
     if (existing) {
-      await supabase.from('dailyLogs').update({ completed: !existing.completed }).eq('id', existing.id);
+      await supabase.from('daily_logs').update({ completed: !existing.completed }).eq('id', existing.id);
     } else {
-      await supabase.from('dailyLogs').insert([{
+      await supabase.from('daily_logs').insert([{
         user_id: currentUser.id,
         date: today,
-        habitId,
+        habit_id: habitId,
         completed: true,
         value: null
       }]);
@@ -94,19 +94,19 @@ export default function Discipline() {
       await supabase.from('habits').update({
         name: newName.trim(),
         frequency: newFrequency,
-        isMandatory: newMandatory
+        is_mandatory: newMandatory
       }).eq('id', editingHabit.id);
     } else {
-      const maxOrder = habits.length > 0 ? Math.max(...habits.map(h => h.order)) + 1 : 0;
+      const maxOrder = habits.length > 0 ? Math.max(...habits.map(h => h.sort_order)) + 1 : 0;
       await supabase.from('habits').insert([{
         user_id: currentUser.id,
         name: newName.trim(),
         category: 'discipline',
         frequency: newFrequency,
-        isMandatory: newMandatory,
-        order: maxOrder,
-        isArchived: false,
-        createdAt: new Date().toISOString(),
+        is_mandatory: newMandatory,
+        sort_order: maxOrder,
+        is_archived: false,
+        created_at: new Date().toISOString(),
         icon: 'target'
       }]);
     }
@@ -116,7 +116,7 @@ export default function Discipline() {
 
   async function deleteHabit(id) {
     if (!currentUser) return;
-    await supabase.from('habits').update({ isArchived: true }).eq('id', id);
+    await supabase.from('habits').update({ is_archived: true }).eq('id', id);
     fetchData();
   }
 
@@ -124,7 +124,7 @@ export default function Discipline() {
     setEditingHabit(habit);
     setNewName(habit.name);
     setNewFrequency(habit.frequency);
-    setNewMandatory(habit.isMandatory);
+    setNewMandatory(habit.is_mandatory || false);
     setShowModal(true);
   }
 
@@ -145,7 +145,7 @@ export default function Discipline() {
   // Heatmap data for last 30 days
   const heatmapData = last30.map(dateStr => {
     const dayLogs = monthLogs.filter(l => l.date === dateStr);
-    const dayCompleted = habits.filter(h => dayLogs.some(l => l.habitId === h.id && l.completed)).length;
+    const dayCompleted = habits.filter(h => dayLogs.some(l => l.habit_id === h.id && l.completed)).length;
     const pct = habits.length > 0 ? dayCompleted / habits.length : 0;
     let level = 0;
     if (pct > 0) level = 1;
@@ -237,7 +237,7 @@ export default function Discipline() {
 
                 <span className="habit-name">
                   {habit.name}
-                  {habit.isMandatory && (
+                  {habit.is_mandatory && (
                     <Star size={12} style={{ color: 'var(--accent-warning)', marginLeft: 'var(--space-2)', verticalAlign: 'middle' }} />
                   )}
                 </span>

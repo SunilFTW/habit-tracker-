@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { todayStr, getGreeting, getLast7Days, getDayName } from '../utils/dates';
+import { todayStr, getGreeting, getDayName } from '../utils/dates';
 import { format } from 'date-fns';
-import { Flame, Trophy, TrendingUp, Zap, Quote, Eye, Target, CheckCircle2, ArrowRight } from 'lucide-react';
+import { CloudRain, Sun, Calendar as CalendarIcon, Check, Plus, ArrowRight, Zap, Target, BookOpen, Music, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const pageVariants = {
@@ -13,388 +13,316 @@ const pageVariants = {
   exit: { opacity: 0, y: -8 }
 };
 
-const cardVariants = {
-  initial: { opacity: 0, y: 16 },
-  animate: (i) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.06, duration: 0.4, ease: [0.16, 1, 0.3, 1] }
-  })
+const itemAnim = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, height: 0, overflow: 'hidden', margin: 0, padding: 0 }
 };
-
-function ProgressRing({ value, size = 140, strokeWidth = 8, color = '#7C6BF0' }) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
-
-  return (
-    <div className="progress-ring-container" style={{ width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle
-          cx={size / 2} cy={size / 2} r={radius}
-          fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={strokeWidth}
-        />
-        <motion.circle
-          cx={size / 2} cy={size / 2} r={radius}
-          fill="none" stroke={color} strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        />
-      </svg>
-      <span className="progress-ring-value" style={{ fontSize: size > 120 ? '2rem' : '1.25rem' }}>
-        {value}%
-      </span>
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const { currentUser } = useAuth();
   const today = todayStr();
-  const last7 = useMemo(() => getLast7Days(), []);
+  const todayDate = new Date();
 
-  const [habits, setHabits] = useState([]);
-  const [todayLogs, setTodayLogs] = useState([]);
-  const [weekLogs, setWeekLogs] = useState([]);
+  // State
+  const [masterList, setMasterList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Stats / Side items
   const [hardThing, setHardThing] = useState(null);
-  const [quote, setQuote] = useState(null);
-  const [futureSelfEntry, setFutureSelfEntry] = useState(null);
-  const [settings, setSettings] = useState({});
-  const [fitnessToday, setFitnessToday] = useState(null);
-  const [streak, setStreak] = useState(0);
-  const [eliteDays, setEliteDays] = useState(0);
 
-  useEffect(() => {
+  const fetchMasterList = async () => {
     if (!currentUser) return;
-    
-    async function fetchData() {
+    setLoading(true);
+
+    try {
+      // Fetch discipline habits & today's logs
       const [
-        { data: habitsData },
-        { data: logsData },
-        { data: wLogsData },
-        { data: htData },
-        { data: quotesData },
-        { data: fsData },
-        { data: setData },
-        { data: fitData }
+        { data: habits },
+        { data: dailyLogs },
+        { data: tasks },
+        { data: htData }
       ] = await Promise.all([
-        supabase.from('habits').select('*').eq('user_id', currentUser.id),
-        supabase.from('discipline_logs').select('*').eq('user_id', currentUser.id).eq('date', today),
-        supabase.from('discipline_logs').select('*').eq('user_id', currentUser.id).in('date', last7),
+        supabase.from('habits').select('*').eq('user_id', currentUser.id).eq('is_archived', false).order('sort_order'),
+        supabase.from('daily_logs').select('*').eq('user_id', currentUser.id).eq('date', today),
+        supabase.from('tasks').select('*').eq('user_id', currentUser.id).eq('date', today).order('sort_order'),
         supabase.from('hard_things').select('*').eq('user_id', currentUser.id).eq('date', today).limit(1).maybeSingle(),
-        supabase.from('quotes').select('*'),
-        supabase.from('future_self').select('*').eq('user_id', currentUser.id),
-        supabase.from('settings').select('*').eq('user_id', currentUser.id),
-        supabase.from('workouts').select('*').eq('user_id', currentUser.id).eq('date', today).limit(1).maybeSingle()
       ]);
 
-      if (habitsData) setHabits(habitsData.filter(h => (!h.isArchived && !h.is_archived) && h.frequency === 'daily'));
-      if (logsData) setTodayLogs(logsData);
-      if (wLogsData) setWeekLogs(wLogsData);
-      if (htData) setHardThing(htData);
-      
-      if (quotesData && quotesData.length > 0) {
-        const dayIdx = new Date().getDate() % quotesData.length;
-        setQuote(quotesData[dayIdx]);
-      }
-      
-      if (fsData && fsData.length > 0) {
-        const idx = Math.floor(Math.random() * fsData.length);
-        setFutureSelfEntry(fsData[idx]);
-      }
+      setHardThing(htData);
 
-      if (setData) {
-        const map = {};
-        setData.forEach(s => { map[s.key] = s.value; });
-        setSettings(map);
-      }
+      const items = [];
 
-      if (fitData) setFitnessToday(fitData);
+      // Add Habits
+      const completedHabitIds = new Set((dailyLogs || []).filter(l => l.completed).map(l => l.habit_id));
+      (habits || []).forEach(h => {
+        items.push({
+          id: `habit-${h.id}`,
+          originalId: h.id,
+          type: 'habit',
+          title: h.name,
+          category: h.category,
+          completed: completedHabitIds.has(h.id),
+          icon: Target,
+          time: 'Daily Routine',
+          sortOrder: h.sort_order
+        });
+      });
+
+      // Add Tasks
+      (tasks || []).forEach(t => {
+        items.push({
+          id: `task-${t.id}`,
+          originalId: t.id,
+          type: 'task',
+          title: t.title,
+          category: t.category,
+          completed: t.completed,
+          icon: BookOpen,
+          time: t.category === 'cleaning' ? 'Home' : 'Life',
+          sortOrder: t.sort_order
+        });
+      });
+
+      // Sort by completion and then order
+      items.sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return a.sortOrder - b.sortOrder;
+      });
+
+      setMasterList(items);
+    } catch (err) {
+      console.error('Error fetching master list:', err);
+    } finally {
+      setLoading(false);
     }
-    
-    fetchData();
-  }, [currentUser, today, last7]);
+  };
 
-  // Calculations
-  const completedIds = new Set(todayLogs.filter(l => l.completed).map(l => l.habitId || l.habit_id));
-  const disciplineHabits = habits.filter(h => h.category === 'discipline');
-  const disciplineCompleted = disciplineHabits.filter(h => completedIds.has(h.id)).length;
-  const disciplineScore = disciplineHabits.length > 0
-    ? Math.round((disciplineCompleted / disciplineHabits.length) * 100) : 0;
-
-  const totalCompleted = habits.filter(h => completedIds.has(h.id)).length;
-  const dailyCompletion = habits.length > 0
-    ? Math.round((totalCompleted / habits.length) * 100) : 0;
-
-  const mandatoryHabits = habits.filter(h => h.isMandatory || h.is_mandatory);
-  const isEliteDay = mandatoryHabits.length > 0 && mandatoryHabits.every(h => completedIds.has(h.id));
-
-  // Streaks
   useEffect(() => {
+    fetchMasterList();
+  }, [currentUser, today]);
+
+  // Handlers
+  const handleToggle = async (item) => {
     if (!currentUser) return;
-    (async () => {
-      const { data: logs } = await supabase
-        .from('discipline_logs')
+    const isNowCompleted = !item.completed;
+    
+    // Optimistic update
+    setMasterList(prev => prev.map(i => i.id === item.id ? { ...i, completed: isNowCompleted } : i));
+
+    if (item.type === 'habit') {
+      const { data: existing } = await supabase.from('daily_logs')
         .select('*')
         .eq('user_id', currentUser.id)
-        .gte('date', format(new Date(new Date().setDate(new Date().getDate() - 365)), 'yyyy-MM-dd'));
-
-      const { data: allHabitsData } = await supabase
-        .from('habits')
-        .select('*')
-        .eq('user_id', currentUser.id);
-        
-      const allLogs = logs || [];
-      const allHabits = allHabitsData || [];
-
-      // Streak
-      let s = 0;
-      const dHabits = allHabits.filter(h => (!h.isArchived && !h.is_archived) && h.category === 'discipline');
+        .eq('date', today)
+        .eq('habit_id', item.originalId)
+        .maybeSingle();
       
-      for (let i = 0; i < 365; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateStr = format(d, 'yyyy-MM-dd');
-        const dayLogs = allLogs.filter(l => l.date === dateStr);
-        const done = dHabits.filter(h => dayLogs.some(l => (l.habitId === h.id || l.habit_id === h.id) && l.completed)).length;
-        
-        if (done > 0) {
-          s++;
-        } else if (i === 0) {
-          continue; 
-        } else {
-          break;
-        }
+      if (existing) {
+        await supabase.from('daily_logs').update({ completed: isNowCompleted }).eq('id', existing.id);
+      } else {
+        await supabase.from('daily_logs').insert([{
+          user_id: currentUser.id,
+          date: today,
+          habit_id: item.originalId,
+          completed: true
+        }]);
       }
-      setStreak(s);
+    } else if (item.type === 'task') {
+      await supabase.from('tasks').update({ completed: isNowCompleted }).eq('id', item.originalId);
+    }
+    
+    // Re-fetch to guarantee sync
+    fetchMasterList();
+  };
 
-      // Elite days
-      const now = new Date();
-      let ed = 0;
-      const mHabits = allHabits.filter(h => (h.isMandatory || h.is_mandatory) && (!h.isArchived && !h.is_archived));
-      for (let day = 1; day <= now.getDate(); day++) {
-        const dateStr = format(new Date(now.getFullYear(), now.getMonth(), day), 'yyyy-MM-dd');
-        const dayLogs = allLogs.filter(l => l.date === dateStr);
-        const cIds = new Set(dayLogs.filter(l => l.completed).map(l => l.habitId || l.habit_id));
-        if (mHabits.length > 0 && mHabits.every(h => cIds.has(h.id))) {
-          ed++;
-        }
-      }
-      setEliteDays(ed);
-    })();
-  }, [currentUser]);
-
-  // Week chart data
-  const weekData = last7.map(dateStr => {
-    const dayLogs = weekLogs.filter(l => l.date === dateStr);
-    const dayCompleted = habits.filter(h => dayLogs.some(l => (l.habitId === h.id || l.habit_id === h.id) && l.completed)).length;
-    const pct = habits.length > 0 ? Math.round((dayCompleted / habits.length) * 100) : 0;
-    return {
-      day: getDayName(dateStr),
-      pct,
-      isToday: dateStr === today
-    };
-  });
-
-  // Weight progress
-  const weightGoal = settings.weightGoal || 70;
-  const currentWeight = fitnessToday?.weight;
+  const completedCount = masterList.filter(i => i.completed).length;
+  const totalCount = masterList.length;
+  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <motion.div className="page-container" variants={pageVariants} initial="initial" animate="animate" exit="exit">
-      {/* Header */}
-      <div className="page-header">
-        <motion.p className="text-muted" style={{ fontSize: 'var(--fs-base)' }}
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
-          {getGreeting()}, {settings.userName || 'Champion'}
-        </motion.p>
-        <motion.h1 style={{ fontSize: 'var(--fs-2xl)', letterSpacing: '-0.03em' }}
-          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          Did you become better today?
-        </motion.h1>
-      </div>
+      
+      <div className="dashboard-grid">
+        
+        {/* LEFT COLUMN: Date & Weather */}
+        <div className="dash-col-left">
+          <div className="mb-6">
+            <h1 style={{ fontSize: 'var(--fs-3xl)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              Happy<br/>{format(todayDate, 'EEEE')} <span role="img" aria-label="wave">👋</span>
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', marginTop: 'var(--space-2)', fontSize: 'var(--fs-sm)' }}>
+              {format(todayDate, 'dd MMM yyyy, hh:mm a')}
+            </p>
+          </div>
 
-      {/* Elite Day Banner */}
-      {isEliteDay && (
-        <motion.div className="elite-banner mb-6"
-          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
-          <div className="elite-emoji">🏆</div>
-          <div className="elite-text">Elite Day Achieved!</div>
-          <p className="text-muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 'var(--space-1)' }}>
-            All mandatory habits completed. You're unstoppable.
-          </p>
-        </motion.div>
-      )}
-
-      {/* Main Stats */}
-      <div className="grid-4 mb-6">
-        {/* Discipline Score */}
-        <motion.div className="card-gradient" custom={0} variants={cardVariants} initial="initial" animate="animate"
-          style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-6)', padding: 'var(--space-8) var(--space-6)' }}>
-          <ProgressRing value={disciplineScore} size={130} />
-          <div>
-            <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-secondary)', fontWeight: 'var(--fw-medium)', marginBottom: 'var(--space-1)' }}>
-              Discipline Score
-            </div>
-            <div style={{ fontSize: 'var(--fs-lg)', fontWeight: 'var(--fw-bold)' }}>
-              {disciplineCompleted}/{disciplineHabits.length} habits
-            </div>
-            <Link to="/app/discipline" style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: 'var(--space-2)' }}>
-              View all <ArrowRight size={14} />
+          {/* Quick Actions */}
+          <div className="flex-col gap-2 mb-6">
+            <Link to="/app/life" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+              <Plus size={16} /> New Tasks
+            </Link>
+            <Link to="/app/discipline" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
+              Browse Habits
             </Link>
           </div>
-        </motion.div>
 
-        {/* Daily Completion */}
-        <motion.div className="card stat-card" custom={1} variants={cardVariants} initial="initial" animate="animate">
-          <div className="stat-label flex-between">
-            <span>Daily %</span>
-            <CheckCircle2 size={16} style={{ color: 'var(--accent-success)' }} />
-          </div>
-          <div className="stat-value" style={{ color: dailyCompletion >= 80 ? 'var(--accent-success)' : dailyCompletion >= 50 ? 'var(--accent-warning)' : 'var(--accent-danger)' }}>
-            {dailyCompletion}%
-          </div>
-          <div className="progress-bar mt-2">
-            <div className="progress-bar-fill" style={{ width: `${dailyCompletion}%` }} />
-          </div>
-        </motion.div>
-
-        {/* Streak */}
-        <motion.div className="card stat-card" custom={2} variants={cardVariants} initial="initial" animate="animate">
-          <div className="stat-label flex-between">
-            <span>Streak</span>
-            <Flame size={16} style={{ color: 'var(--accent-orange)' }} />
-          </div>
-          <div className="stat-value" style={{ color: 'var(--accent-warning)' }}>
-            {streak}
-          </div>
-          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', marginTop: 'var(--space-1)' }}>
-            {streak === 1 ? 'day' : 'days'} 🔥
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Second Row */}
-      <div className="grid-3 mb-6">
-        {/* Elite Days */}
-        <motion.div className="card stat-card" custom={3} variants={cardVariants} initial="initial" animate="animate">
-          <div className="stat-label flex-between">
-            <span>Elite Days</span>
-            <Trophy size={16} style={{ color: 'var(--accent-warning)' }} />
-          </div>
-          <div className="stat-value">{eliteDays}</div>
-          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)' }}>this month</div>
-        </motion.div>
-
-        {/* Weight Progress */}
-        <motion.div className="card stat-card" custom={4} variants={cardVariants} initial="initial" animate="animate">
-          <div className="stat-label flex-between">
-            <span>Weight</span>
-            <TrendingUp size={16} style={{ color: 'var(--accent-secondary)' }} />
-          </div>
-          <div className="stat-value">
-            {currentWeight ? `${currentWeight}kg` : '—'}
-          </div>
-          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)' }}>
-            Goal: {weightGoal}kg
-          </div>
-        </motion.div>
-
-        {/* Hard Thing */}
-        <motion.div className="card" custom={5} variants={cardVariants} initial="initial" animate="animate"
-          style={{ borderColor: hardThing?.completed ? 'rgba(52, 211, 153, 0.2)' : hardThing ? 'rgba(251, 191, 36, 0.2)' : 'var(--glass-border)' }}>
-          <div className="stat-label flex-between mb-2">
-            <span>Today's Hard Thing</span>
-            <Zap size={16} style={{ color: 'var(--accent-warning)' }} />
-          </div>
-          {hardThing ? (
-            <>
-              <div style={{ fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-medium)', marginBottom: 'var(--space-2)' }}>
-                {hardThing.task}
-              </div>
-              <span className={`badge ${hardThing.completed ? 'badge-green' : 'badge-yellow'}`}>
-                {hardThing.completed ? '✓ Completed' : '⏳ In Progress'}
-              </span>
-            </>
-          ) : (
-            <Link to="/app/hard-thing" style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              Set today's challenge <ArrowRight size={14} />
-            </Link>
-          )}
-        </motion.div>
-      </div>
-
-      {/* Weekly Overview */}
-      <motion.div className="card mb-6" custom={6} variants={cardVariants} initial="initial" animate="animate">
-        <div className="stat-label mb-4">Weekly Overview</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-2)', height: 100 }}>
-          {weekData.map((d, i) => (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-1)' }}>
-              <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
-                {d.pct}%
-              </div>
-              <div style={{
-                width: '100%', maxWidth: 36,
-                height: `${Math.max(d.pct * 0.8, 4)}px`,
-                borderRadius: 'var(--radius-sm)',
-                background: d.isToday ? 'var(--accent-gradient)' : d.pct >= 80 ? 'var(--accent-success)' : d.pct >= 50 ? 'rgba(124,107,240,0.5)' : 'var(--bg-tertiary)',
-                transition: 'height 0.4s ease'
-              }} />
-              <div style={{
-                fontSize: 'var(--fs-xs)',
-                color: d.isToday ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                fontWeight: d.isToday ? 'var(--fw-semibold)' : 'var(--fw-normal)'
-              }}>
-                {d.day}
-              </div>
+          {/* Mini Calendar (Decorative) */}
+          <div className="card mb-6" style={{ padding: 'var(--space-4)' }}>
+            <div className="flex-between mb-4">
+              <span style={{ fontWeight: 'var(--fw-bold)' }}>{format(todayDate, 'MMMM, yyyy')}</span>
             </div>
-          ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, textAlign: 'center', fontSize: 'var(--fs-xs)' }}>
+              {['S','M','T','W','T','F','S'].map(d => <div key={d} style={{ color: 'var(--text-tertiary)' }}>{d}</div>)}
+              {Array.from({ length: 31 }).map((_, i) => {
+                const isToday = (i + 1) === todayDate.getDate();
+                return (
+                  <div key={i} style={{
+                    padding: '6px 0',
+                    borderRadius: '50%',
+                    background: isToday ? 'var(--text-primary)' : 'transparent',
+                    color: isToday ? 'white' : 'inherit',
+                    fontWeight: isToday ? 'bold' : 'normal'
+                  }}>
+                    {i + 1}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
-      </motion.div>
 
-      {/* Quote & Future Self */}
-      <div className="grid-2 mb-6">
-        {/* Daily Quote */}
-        <motion.div custom={7} variants={cardVariants} initial="initial" animate="animate">
-          {quote && (
-            <div className="quote-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
-                <Quote size={14} style={{ color: 'var(--accent-primary)' }} />
-                <span className="stat-label" style={{ margin: 0 }}>Daily Quote</span>
+        {/* CENTER COLUMN: Master Checklist */}
+        <div className="dash-col-center">
+          
+          <div className="widget-header">
+            <div className="widget-title">Today's Todos</div>
+            <Link to="/app/life" className="widget-link">View Details</Link>
+          </div>
+
+          <div className="card" style={{ padding: 'var(--space-5)', minHeight: '600px' }}>
+            
+            {/* Master Progress */}
+            <div className="flex-between mb-2">
+              <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}>
+                Overall Completion
+              </span>
+              <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--accent-primary)' }}>
+                {Math.round(progress)}%
+              </span>
+            </div>
+            <div className="progress-bar mb-6" style={{ height: 8 }}>
+              <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+            </div>
+
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 'var(--space-6)', color: 'var(--text-tertiary)' }}>
+                Loading your day...
               </div>
-              <div className="quote-text">"{quote.text}"</div>
-              <div className="quote-author">— {quote.author}</div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Future Self Reminder */}
-        <motion.div custom={8} variants={cardVariants} initial="initial" animate="animate">
-          <div className="card" style={{ borderLeft: '3px solid var(--accent-secondary)', borderRadius: '0 var(--radius-lg) var(--radius-lg) 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
-              <Eye size={14} style={{ color: 'var(--accent-secondary)' }} />
-              <span className="stat-label" style={{ margin: 0 }}>Future Self Reminder</span>
-            </div>
-            {futureSelfEntry ? (
-              <>
-                <div style={{ fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-medium)', marginBottom: 'var(--space-2)' }}>
-                  {futureSelfEntry.title}
-                </div>
-                <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  {futureSelfEntry.content?.substring(0, 150)}{futureSelfEntry.content?.length > 150 ? '...' : ''}
-                </div>
-              </>
+            ) : masterList.length === 0 ? (
+              <div className="empty-state" style={{ border: 'none', background: 'transparent' }}>
+                <CheckCircle2 className="empty-state-icon" style={{ color: 'var(--accent-success)' }} />
+                <h3>All Clear!</h3>
+                <p>You have no tasks or habits for today.</p>
+                <Link to="/app/life" className="btn btn-primary mt-4">Add Tasks</Link>
+              </div>
             ) : (
-              <Link to="/app/future-self" style={{ fontSize: 'var(--fs-sm)', color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                Write to your future self <ArrowRight size={14} />
-              </Link>
+              <div className="flex-col gap-3">
+                <AnimatePresence>
+                  {masterList.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      className={`checkbox-item ${item.completed ? 'checked' : ''}`}
+                      style={{ 
+                        background: 'transparent', 
+                        border: 'none', 
+                        padding: 'var(--space-2) 0',
+                        borderBottom: '1px solid var(--glass-border)',
+                        borderRadius: 0
+                      }}
+                      onClick={() => handleToggle(item)}
+                      variants={itemAnim}
+                      initial="initial" animate="animate" exit="exit"
+                      layout
+                    >
+                      <div className="checkbox-circle" style={{ 
+                        background: item.completed ? 'var(--accent-success)' : 'transparent',
+                        borderColor: item.completed ? 'var(--accent-success)' : 'var(--glass-border-hover)'
+                      }}>
+                        {item.completed && <Check size={14} style={{ color: 'white' }} />}
+                      </div>
+                      
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <span style={{
+                          fontSize: 'var(--fs-base)',
+                          fontWeight: 'var(--fw-semibold)',
+                          color: item.completed ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                          textDecoration: item.completed ? 'line-through' : 'none'
+                        }}>
+                          {item.title}
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--fs-xs)', color: 'var(--text-tertiary)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <item.icon size={12} /> {item.time}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
             )}
           </div>
-        </motion.div>
+        </div>
+
+        {/* RIGHT COLUMN: Integrations & Extras */}
+        <div className="dash-col-right">
+          
+          {/* Spotify Fake Integration (Aesthetic) */}
+          <div className="card mb-6" style={{ background: '#F0F8EC', borderColor: '#E0EED9', textAlign: 'center' }}>
+            <div style={{ background: '#1DB954', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--space-4)' }}>
+              <Music size={24} color="white" />
+            </div>
+            <h3 style={{ fontSize: 'var(--fs-lg)', fontWeight: 'var(--fw-bold)', marginBottom: 'var(--space-2)' }}>Connect your<br/>Spotify account</h3>
+            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-4)' }}>
+              Empower yourself with habit tracking while enjoying uninterrupted music
+            </p>
+            <button className="btn w-full" style={{ background: '#1A1D20', color: 'white' }}>
+              Link Account
+            </button>
+          </div>
+
+          {/* Hard Thing Widget */}
+          <div className="widget-header">
+            <div className="widget-title">Should Do!</div>
+            <Link to="/app/hard-thing" className="widget-link">View Details</Link>
+          </div>
+          
+          <div className="card mb-6" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <div style={{ background: 'var(--accent-primary-dim)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)' }}>
+              <Zap size={20} style={{ color: 'var(--accent-primary)' }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-bold)' }}>
+                {hardThing ? hardThing.task : 'Set your Hard Thing'}
+              </div>
+              <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)' }}>
+                {hardThing?.completed ? 'Completed 🎉' : 'Do the hard work'}
+              </div>
+            </div>
+            <ChevronRight size={16} style={{ color: 'var(--text-tertiary)' }} />
+          </div>
+
+        </div>
+
       </div>
     </motion.div>
+  );
+}
+
+function ChevronRight(props) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
   );
 }
