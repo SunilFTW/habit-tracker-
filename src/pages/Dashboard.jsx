@@ -38,16 +38,21 @@ export default function Dashboard() {
     try {
       // Fetch discipline habits & today's logs
       const [
-        { data: habits },
-        { data: dailyLogs },
-        { data: tasks },
-        { data: htData }
+        { data: habits, error: err1 },
+        { data: dailyLogs, error: err2 },
+        { data: tasks, error: err3 },
+        { data: htData, error: err4 }
       ] = await Promise.all([
         supabase.from('habits').select('*').eq('user_id', currentUser.id).eq('isArchived', false).order('order'),
         supabase.from('dailyLogs').select('*').eq('user_id', currentUser.id).eq('date', today),
         supabase.from('tasks').select('*').eq('user_id', currentUser.id).eq('date', today).order('sort_order'),
         supabase.from('hard_things').select('*').eq('user_id', currentUser.id).eq('date', today).limit(1).maybeSingle(),
       ]);
+
+      if (err1) alert("Habits Error: " + err1.message);
+      if (err2) alert("Daily Logs Error: " + err2.message);
+      if (err3) alert("Tasks Error: " + err3.message);
+      if (err4) alert("Hard Things Error: " + err4.message);
 
       setHardThing(htData);
 
@@ -111,25 +116,30 @@ export default function Dashboard() {
     setMasterList(prev => prev.map(i => i.id === item.id ? { ...i, completed: isNowCompleted } : i));
 
     if (item.type === 'habit') {
-      const { data: existing } = await supabase.from('dailyLogs')
+      const { data: existing, error: fetchErr } = await supabase.from('dailyLogs')
         .select('*')
         .eq('user_id', currentUser.id)
         .eq('date', today)
         .eq('habitId', item.originalId)
         .maybeSingle();
       
+      if (fetchErr) alert("Fetch Error: " + fetchErr.message);
+      
       if (existing) {
-        await supabase.from('dailyLogs').update({ completed: isNowCompleted }).eq('id', existing.id);
+        const { error: upErr } = await supabase.from('dailyLogs').update({ completed: isNowCompleted }).eq('id', existing.id);
+        if (upErr) alert("Update Error: " + upErr.message);
       } else {
-        await supabase.from('dailyLogs').insert([{
+        const { error: inErr } = await supabase.from('dailyLogs').insert([{
           user_id: currentUser.id,
           date: today,
           habitId: item.originalId,
           completed: true
         }]);
+        if (inErr) alert("Insert Error: " + inErr.message);
       }
     } else if (item.type === 'task') {
-      await supabase.from('tasks').update({ completed: isNowCompleted }).eq('id', item.originalId);
+      const { error: taskErr } = await supabase.from('tasks').update({ completed: isNowCompleted }).eq('id', item.originalId);
+      if (taskErr) alert("Task Update Error: " + taskErr.message);
     }
     
     // Re-fetch to guarantee sync

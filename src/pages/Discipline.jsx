@@ -75,15 +75,17 @@ export default function Discipline() {
     if (!currentUser) return;
     const existing = todayLogs.find(l => l.habitId === habitId);
     if (existing) {
-      await supabase.from('dailyLogs').update({ completed: !existing.completed }).eq('id', existing.id);
+      const { error: upErr } = await supabase.from('dailyLogs').update({ completed: !existing.completed }).eq('id', existing.id);
+      if (upErr) alert("Update Error: " + upErr.message);
     } else {
-      await supabase.from('dailyLogs').insert([{
+      const { error: inErr } = await supabase.from('dailyLogs').insert([{
         user_id: currentUser.id,
         date: today,
         habitId,
         completed: true,
         value: null
       }]);
+      if (inErr) alert("Insert Error: " + inErr.message);
     }
     fetchData();
   }
@@ -91,14 +93,15 @@ export default function Discipline() {
   async function saveHabit() {
     if (!newName.trim() || !currentUser) return;
     if (editingHabit) {
-      await supabase.from('habits').update({
+      const { error } = await supabase.from('habits').update({
         name: newName.trim(),
         frequency: newFrequency,
         isMandatory: newMandatory
       }).eq('id', editingHabit.id);
+      if (error) alert("Save Error: " + error.message);
     } else {
       const maxOrder = habits.length > 0 ? Math.max(...habits.map(h => h.order)) + 1 : 0;
-      await supabase.from('habits').insert([{
+      const { error } = await supabase.from('habits').insert([{
         user_id: currentUser.id,
         name: newName.trim(),
         category: 'discipline',
@@ -109,6 +112,7 @@ export default function Discipline() {
         createdAt: new Date().toISOString(),
         icon: 'target'
       }]);
+      if (error) alert("Create Error: " + error.message);
     }
     closeModal();
     fetchData();
