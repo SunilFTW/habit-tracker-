@@ -43,7 +43,7 @@ export default function Dashboard() {
         { data: tasks, error: err3 },
         { data: htData, error: err4 }
       ] = await Promise.all([
-        supabase.from('habits').select('*').eq('user_id', currentUser.id).eq('is_archived', false).order('order'),
+        supabase.from('habits').select('*').eq('user_id', currentUser.id).eq('is_archived', false).order('sort_order'),
         supabase.from('daily_logs').select('*').eq('user_id', currentUser.id).eq('date', today),
         supabase.from('tasks').select('*').eq('user_id', currentUser.id).eq('date', today).order('sort_order'),
         supabase.from('hard_things').select('*').eq('user_id', currentUser.id).eq('date', today).limit(1).maybeSingle(),
@@ -70,7 +70,7 @@ export default function Dashboard() {
           completed: completedHabitIds.has(h.id),
           icon: Target,
           time: 'Daily Routine',
-          sortOrder: h.order
+          sortOrder: h.sort_order
         });
       });
 

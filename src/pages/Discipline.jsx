@@ -40,7 +40,7 @@ export default function Discipline() {
       .eq('user_id', currentUser.id)
       .eq('category', 'discipline')
       .eq('is_archived', false)
-      .order('order');
+      .order('sort_order');
     if (habitsData) setHabits(habitsData);
 
     const { data: todayLogsData } = await supabase
@@ -100,14 +100,14 @@ export default function Discipline() {
       }).eq('id', editingHabit.id);
       if (error) alert("Save Error: " + error.message);
     } else {
-      const maxOrder = habits.length > 0 ? Math.max(...habits.map(h => h.order)) + 1 : 0;
+      const maxOrder = habits.length > 0 ? Math.max(...habits.map(h => h.sort_order)) + 1 : 0;
       const { error } = await supabase.from('habits').insert([{
         user_id: currentUser.id,
         name: newName.trim(),
         category: 'discipline',
         frequency: newFrequency,
         is_mandatory: newMandatory,
-        order: maxOrder,
+        sort_order: maxOrder,
         is_archived: false,
         created_at: new Date().toISOString(),
         icon: 'target'
