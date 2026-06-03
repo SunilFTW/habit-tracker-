@@ -277,20 +277,6 @@ export default function Dashboard() {
         {/* RIGHT COLUMN: Integrations & Extras */}
         <div className="dash-col-right">
           
-          {/* Spotify Fake Integration (Aesthetic) */}
-          <div className="card mb-6" style={{ background: '#F0F8EC', borderColor: '#E0EED9', textAlign: 'center' }}>
-            <div style={{ background: '#1DB954', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--space-4)' }}>
-              <Music size={24} color="white" />
-            </div>
-            <h3 style={{ fontSize: 'var(--fs-lg)', fontWeight: 'var(--fw-bold)', marginBottom: 'var(--space-2)' }}>Connect your<br/>Spotify account</h3>
-            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-4)' }}>
-              Empower yourself with habit tracking while enjoying uninterrupted music
-            </p>
-            <button className="btn w-full" style={{ background: '#1A1D20', color: 'white' }}>
-              Link Account
-            </button>
-          </div>
-
           {/* Hard Thing Widget */}
           <div className="widget-header">
             <div className="widget-title">Should Do!</div>
