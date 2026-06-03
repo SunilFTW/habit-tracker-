@@ -224,7 +224,7 @@ export default function Settings() {
           <SettingsIcon style={{ width: 28, height: 28, color: 'var(--accent-primary)' }} />
           <span className="text-gradient">Settings</span>
         </h1>
-        <p>Customize your 1% OS experience.</p>
+        <p>Customize your Habit Tracker experience.</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', maxWidth: 640 }}>
@@ -442,7 +442,7 @@ export default function Settings() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--space-2) 0', borderBottom: '1px solid var(--glass-border)' }}>
               <span style={{ fontSize: 'var(--fs-base)', color: 'var(--text-secondary)' }}>App</span>
-              <span style={{ fontSize: 'var(--fs-base)', color: 'var(--text-primary)', fontWeight: 'var(--fw-semibold)' }}>1% OS</span>
+              <span style={{ fontSize: 'var(--fs-base)', color: 'var(--text-primary)', fontWeight: 'var(--fw-semibold)' }}>Habit Tracker</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--space-2) 0', borderBottom: '1px solid var(--glass-border)' }}>
               <span style={{ fontSize: 'var(--fs-base)', color: 'var(--text-secondary)' }}>Version</span>

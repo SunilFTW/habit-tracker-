@@ -21,13 +21,12 @@
 .landing-nav-logo-icon {
   width: 32px;
   height: 32px;
-  background-color: var(--accent-primary);
-  color: #000;
-  border-radius: var(--radius-md);
+  font-weight: var(--fw-bold);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--fw-bold);
+  background-color: var(--text-primary);
 }
 
 .landing-nav-links {
@@ -48,7 +47,7 @@
   font-weight: var(--fw-extrabold);
   letter-spacing: -0.04em;
   margin-bottom: var(--space-4);
-  background: linear-gradient(135deg, #fff 0%, #888 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

@@ -74,7 +74,7 @@ export default function Layout({ children }) {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="sidebar-logo">1%</div>
-          <span className="sidebar-title">1% OS</span>
+          <span className="sidebar-title">Habit Tracker</span>
         </div>
         <nav className="sidebar-nav">
           {Object.entries(sections).map(([key, label]) => (
