@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { todayStr, getGreeting, getDayName } from '../utils/dates';
 import { format } from 'date-fns';
 import { CloudRain, Sun, Calendar as CalendarIcon, Check, Plus, ArrowRight, Zap, Target, BookOpen, Music, CheckCircle2 } from 'lucide-react';
+import { getIconComponent } from '../components/IconPicker';
 import { Link } from 'react-router-dom';
 
 const pageVariants = {
@@ -68,7 +69,7 @@ export default function Dashboard() {
           title: h.name,
           category: h.category,
           completed: completedHabitIds.has(h.id),
-          icon: Target,
+          icon: getIconComponent(h.icon || 'Target'),
           time: 'Daily Routine',
           sortOrder: h.sort_order
         });
@@ -214,14 +215,14 @@ export default function Dashboard() {
             {/* Master Progress */}
             <div className="flex-between mb-2">
               <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-secondary)' }}>
-                Overall Completion
+                Daily Quest Progress
               </span>
               <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--accent-primary)' }}>
-                {Math.round(progress)}%
+                Level {Math.floor(progress / 10)} ({Math.round(progress)}%)
               </span>
             </div>
-            <div className="progress-bar mb-6" style={{ height: 8 }}>
-              <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+            <div className="progress-bar mb-6" style={{ height: 10 }}>
+              <div className="progress-bar-fill xp-bar" style={{ width: `${progress}%` }} />
             </div>
 
             {loading ? (

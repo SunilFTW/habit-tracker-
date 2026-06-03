@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { todayStr, getLast30Days, getDayName } from '../utils/dates';
 import { format } from 'date-fns';
 import { Target, Plus, Edit3, Trash2, Check, X, Flame, Star, GripVertical } from 'lucide-react';
+import IconPicker, { getIconComponent } from '../components/IconPicker';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -19,6 +20,7 @@ export default function Discipline() {
   const [newName, setNewName] = useState('');
   const [newFrequency, setNewFrequency] = useState('daily');
   const [newMandatory, setNewMandatory] = useState(false);
+  const [newIcon, setNewIcon] = useState('Target');
 
   const [habits, setHabits] = useState([]);
   const [todayLogs, setTodayLogs] = useState([]);
@@ -96,7 +98,8 @@ export default function Discipline() {
       const { error } = await supabase.from('habits').update({
         name: newName.trim(),
         frequency: newFrequency,
-        is_mandatory: newMandatory
+        is_mandatory: newMandatory,
+        icon: newIcon
       }).eq('id', editingHabit.id);
       if (error) alert("Save Error: " + error.message);
     } else {
@@ -110,7 +113,7 @@ export default function Discipline() {
         sort_order: maxOrder,
         is_archived: false,
         created_at: new Date().toISOString(),
-        icon: 'target'
+        icon: newIcon
       }]);
       if (error) alert("Create Error: " + error.message);
     }
@@ -129,14 +132,16 @@ export default function Discipline() {
     setNewName(habit.name);
     setNewFrequency(habit.frequency);
     setNewMandatory(habit.is_mandatory);
+    setNewIcon(habit.icon || 'Target');
     setShowModal(true);
   }
 
-  function openNew() {
+  function openAdd() {
     setEditingHabit(null);
     setNewName('');
     setNewFrequency('daily');
     setNewMandatory(false);
+    setNewIcon('Target');
     setShowModal(true);
   }
 
@@ -166,7 +171,7 @@ export default function Discipline() {
           <h1>⚡ Discipline System</h1>
           <p>Build unbreakable habits, one day at a time.</p>
         </div>
-        <button className="btn btn-primary" onClick={openNew}>
+        <button className="btn btn-primary" onClick={openAdd}>
           <Plus size={16} /> Add Habit
         </button>
       </div>
@@ -219,6 +224,7 @@ export default function Discipline() {
         <AnimatePresence>
           {habits.map((habit, i) => {
             const isDone = completedIds.has(habit.id);
+            const HabitIcon = getIconComponent(habit.icon);
             return (
               <motion.div
                 key={habit.id}
@@ -228,6 +234,9 @@ export default function Discipline() {
                 transition={{ delay: i * 0.04 }}
                 layout
               >
+                <div className={`habit-icon ${isDone ? 'completed' : ''}`}>
+                  <HabitIcon size={20} />
+                </div>
                 <button
                   className={`checkbox-circle`}
                   onClick={() => toggleHabit(habit.id)}
@@ -311,6 +320,10 @@ export default function Discipline() {
                     autoFocus
                     onKeyDown={e => e.key === 'Enter' && saveHabit()}
                   />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Icon</label>
+                  <IconPicker value={newIcon} onChange={setNewIcon} />
                 </div>
                 <div className="input-group">
                   <label className="input-label">Frequency</label>
