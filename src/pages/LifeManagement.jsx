@@ -138,7 +138,7 @@ function TasksSection({ today }) {
       title: newTask.trim(),
       completed: false,
       category: 'life',
-      order: count
+      sort_order: count
     }]);
     if (error) alert("Task Insert Error: " + error.message);
     setNewTask('');
@@ -219,7 +219,7 @@ function TasksSection({ today }) {
       ) : (
         <div className="flex-col gap-2">
           <AnimatePresence>
-            {[...(tasks || [])].sort((a, b) => a.completed - b.completed || a.order - b.order).map((task, i) => (
+            {[...(tasks || [])].sort((a, b) => a.completed - b.completed || a.sort_order - b.sort_order).map((task, i) => (
               <motion.div
                 key={task.id}
                 className={`checkbox-item ${task.completed ? 'checked' : ''}`}
@@ -296,7 +296,7 @@ function CleaningSection({ today }) {
           title,
           completed: false,
           category: 'cleaning',
-          order: i
+          sort_order: i
         }))
       );
       fetchTasks();
@@ -357,7 +357,7 @@ function CleaningSection({ today }) {
           </motion.div>
 
           <div className="flex-col gap-2">
-            {[...(tasks || [])].sort((a, b) => a.order - b.order).map((task, i) => (
+            {[...(tasks || [])].sort((a, b) => a.sort_order - b.sort_order).map((task, i) => (
               <motion.div
                 key={task.id}
                 className={`checkbox-item ${task.completed ? 'checked' : ''}`}

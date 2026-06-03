@@ -39,12 +39,12 @@ export default function Discipline() {
       .select('*')
       .eq('user_id', currentUser.id)
       .eq('category', 'discipline')
-      .eq('isArchived', false)
+      .eq('is_archived', false)
       .order('order');
     if (habitsData) setHabits(habitsData);
 
     const { data: todayLogsData } = await supabase
-      .from('dailyLogs')
+      .from('daily_logs')
       .select('*')
       .eq('user_id', currentUser.id)
       .eq('date', today);
@@ -58,7 +58,7 @@ export default function Discipline() {
     if (monthLogsData) setMonthLogs(monthLogsData);
   }
 
-  const completedIds = new Set(todayLogs.filter(l => l.completed).map(l => l.habitId));
+  const completedIds = new Set(todayLogs.filter(l => l.completed).map(l => l.habit_id));
   const completed = habits.filter(h => completedIds.has(h.id)).length;
   const score = habits.length > 0 ? Math.round((completed / habits.length) * 100) : 0;
 
@@ -68,20 +68,20 @@ export default function Discipline() {
     return completed > 0 ? '🔥' : '—';
   })();
 
-  const isEliteDay = habits.filter(h => h.isMandatory).length > 0 &&
-    habits.filter(h => h.isMandatory).every(h => completedIds.has(h.id));
+  const isEliteDay = habits.filter(h => h.is_mandatory).length > 0 &&
+    habits.filter(h => h.is_mandatory).every(h => completedIds.has(h.id));
 
   async function toggleHabit(habitId) {
     if (!currentUser) return;
-    const existing = todayLogs.find(l => l.habitId === habitId);
+    const existing = todayLogs.find(l => l.habit_id === habitId);
     if (existing) {
-      const { error: upErr } = await supabase.from('dailyLogs').update({ completed: !existing.completed }).eq('id', existing.id);
+      const { error: upErr } = await supabase.from('daily_logs').update({ completed: !existing.completed }).eq('id', existing.id);
       if (upErr) alert("Update Error: " + upErr.message);
     } else {
-      const { error: inErr } = await supabase.from('dailyLogs').insert([{
+      const { error: inErr } = await supabase.from('daily_logs').insert([{
         user_id: currentUser.id,
         date: today,
-        habitId,
+        habit_id: habitId,
         completed: true,
         value: null
       }]);
@@ -96,7 +96,7 @@ export default function Discipline() {
       const { error } = await supabase.from('habits').update({
         name: newName.trim(),
         frequency: newFrequency,
-        isMandatory: newMandatory
+        is_mandatory: newMandatory
       }).eq('id', editingHabit.id);
       if (error) alert("Save Error: " + error.message);
     } else {
@@ -106,10 +106,10 @@ export default function Discipline() {
         name: newName.trim(),
         category: 'discipline',
         frequency: newFrequency,
-        isMandatory: newMandatory,
+        is_mandatory: newMandatory,
         order: maxOrder,
-        isArchived: false,
-        createdAt: new Date().toISOString(),
+        is_archived: false,
+        created_at: new Date().toISOString(),
         icon: 'target'
       }]);
       if (error) alert("Create Error: " + error.message);
@@ -120,7 +120,7 @@ export default function Discipline() {
 
   async function deleteHabit(id) {
     if (!currentUser) return;
-    await supabase.from('habits').update({ isArchived: true }).eq('id', id);
+    await supabase.from('habits').update({ is_archived: true }).eq('id', id);
     fetchData();
   }
 
@@ -128,7 +128,7 @@ export default function Discipline() {
     setEditingHabit(habit);
     setNewName(habit.name);
     setNewFrequency(habit.frequency);
-    setNewMandatory(habit.isMandatory);
+    setNewMandatory(habit.is_mandatory);
     setShowModal(true);
   }
 
@@ -149,7 +149,7 @@ export default function Discipline() {
   // Heatmap data for last 30 days
   const heatmapData = last30.map(dateStr => {
     const dayLogs = monthLogs.filter(l => l.date === dateStr);
-    const dayCompleted = habits.filter(h => dayLogs.some(l => l.habitId === h.id && l.completed)).length;
+    const dayCompleted = habits.filter(h => dayLogs.some(l => l.habit_id === h.id && l.completed)).length;
     const pct = habits.length > 0 ? dayCompleted / habits.length : 0;
     let level = 0;
     if (pct > 0) level = 1;
@@ -197,7 +197,7 @@ export default function Discipline() {
             </div>
           ) : (
             <div style={{ fontSize: 'var(--fs-md)', color: 'var(--text-secondary)', marginTop: 'var(--space-2)' }}>
-              {habits.filter(h => h.isMandatory && !completedIds.has(h.id)).length} mandatory left
+              {habits.filter(h => h.is_mandatory && !completedIds.has(h.id)).length} mandatory left
             </div>
           )}
         </motion.div>
@@ -241,7 +241,7 @@ export default function Discipline() {
 
                 <span className="habit-name">
                   {habit.name}
-                  {habit.isMandatory && (
+                  {habit.is_mandatory && (
                     <Star size={12} style={{ color: 'var(--accent-warning)', marginLeft: 'var(--space-2)', verticalAlign: 'middle' }} />
                   )}
                 </span>

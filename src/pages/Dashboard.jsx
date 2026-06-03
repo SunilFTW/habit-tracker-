@@ -43,9 +43,9 @@ export default function Dashboard() {
         { data: tasks, error: err3 },
         { data: htData, error: err4 }
       ] = await Promise.all([
-        supabase.from('habits').select('*').eq('user_id', currentUser.id).eq('isArchived', false).order('order'),
-        supabase.from('dailyLogs').select('*').eq('user_id', currentUser.id).eq('date', today),
-        supabase.from('tasks').select('*').eq('user_id', currentUser.id).eq('date', today).order('order'),
+        supabase.from('habits').select('*').eq('user_id', currentUser.id).eq('is_archived', false).order('order'),
+        supabase.from('daily_logs').select('*').eq('user_id', currentUser.id).eq('date', today),
+        supabase.from('tasks').select('*').eq('user_id', currentUser.id).eq('date', today).order('sort_order'),
         supabase.from('hard_things').select('*').eq('user_id', currentUser.id).eq('date', today).limit(1).maybeSingle(),
       ]);
 
@@ -59,7 +59,7 @@ export default function Dashboard() {
       const items = [];
 
       // Add Habits
-      const completedHabitIds = new Set((dailyLogs || []).filter(l => l.completed).map(l => l.habitId));
+      const completedHabitIds = new Set((dailyLogs || []).filter(l => l.completed).map(l => l.habit_id));
       (habits || []).forEach(h => {
         items.push({
           id: `habit-${h.id}`,
@@ -85,7 +85,7 @@ export default function Dashboard() {
           completed: t.completed,
           icon: BookOpen,
           time: t.category === 'cleaning' ? 'Home' : 'Life',
-          sortOrder: t.order
+          sortOrder: t.sort_order
         });
       });
 
@@ -116,23 +116,23 @@ export default function Dashboard() {
     setMasterList(prev => prev.map(i => i.id === item.id ? { ...i, completed: isNowCompleted } : i));
 
     if (item.type === 'habit') {
-      const { data: existing, error: fetchErr } = await supabase.from('dailyLogs')
+      const { data: existing, error: fetchErr } = await supabase.from('daily_logs')
         .select('*')
         .eq('user_id', currentUser.id)
         .eq('date', today)
-        .eq('habitId', item.originalId)
+        .eq('habit_id', item.originalId)
         .maybeSingle();
       
       if (fetchErr) alert("Fetch Error: " + fetchErr.message);
       
       if (existing) {
-        const { error: upErr } = await supabase.from('dailyLogs').update({ completed: isNowCompleted }).eq('id', existing.id);
+        const { error: upErr } = await supabase.from('daily_logs').update({ completed: isNowCompleted }).eq('id', existing.id);
         if (upErr) alert("Update Error: " + upErr.message);
       } else {
-        const { error: inErr } = await supabase.from('dailyLogs').insert([{
+        const { error: inErr } = await supabase.from('daily_logs').insert([{
           user_id: currentUser.id,
           date: today,
-          habitId: item.originalId,
+          habit_id: item.originalId,
           completed: true
         }]);
         if (inErr) alert("Insert Error: " + inErr.message);
