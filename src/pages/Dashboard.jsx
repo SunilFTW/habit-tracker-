@@ -45,7 +45,7 @@ export default function Dashboard() {
       ] = await Promise.all([
         supabase.from('habits').select('*').eq('user_id', currentUser.id).eq('isArchived', false).order('order'),
         supabase.from('dailyLogs').select('*').eq('user_id', currentUser.id).eq('date', today),
-        supabase.from('tasks').select('*').eq('user_id', currentUser.id).eq('date', today).order('sort_order'),
+        supabase.from('tasks').select('*').eq('user_id', currentUser.id).eq('date', today).order('order'),
         supabase.from('hard_things').select('*').eq('user_id', currentUser.id).eq('date', today).limit(1).maybeSingle(),
       ]);
 
@@ -85,7 +85,7 @@ export default function Dashboard() {
           completed: t.completed,
           icon: BookOpen,
           time: t.category === 'cleaning' ? 'Home' : 'Life',
-          sortOrder: t.sort_order
+          sortOrder: t.order
         });
       });
 

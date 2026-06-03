@@ -132,25 +132,28 @@ function TasksSection({ today }) {
   const handleAdd = async () => {
     if (!newTask.trim() || !currentUser) return;
     const count = (tasks || []).length;
-    await supabase.from('tasks').insert([{
+    const { error } = await supabase.from('tasks').insert([{
       user_id: currentUser.id,
       date: today,
       title: newTask.trim(),
       completed: false,
       category: 'life',
-      sort_order: count
+      order: count
     }]);
+    if (error) alert("Task Insert Error: " + error.message);
     setNewTask('');
     fetchTasks();
   };
 
   const handleToggle = async (id, completed) => {
-    await supabase.from('tasks').update({ completed: !completed }).eq('id', id);
+    const { error } = await supabase.from('tasks').update({ completed: !completed }).eq('id', id);
+    if (error) alert("Task Update Error: " + error.message);
     fetchTasks();
   };
 
   const handleDelete = async (id) => {
-    await supabase.from('tasks').delete().eq('id', id);
+    const { error } = await supabase.from('tasks').delete().eq('id', id);
+    if (error) alert("Task Delete Error: " + error.message);
     fetchTasks();
   };
 
@@ -216,7 +219,7 @@ function TasksSection({ today }) {
       ) : (
         <div className="flex-col gap-2">
           <AnimatePresence>
-            {[...(tasks || [])].sort((a, b) => a.completed - b.completed || a.sort_order - b.sort_order).map((task, i) => (
+            {[...(tasks || [])].sort((a, b) => a.completed - b.completed || a.order - b.order).map((task, i) => (
               <motion.div
                 key={task.id}
                 className={`checkbox-item ${task.completed ? 'checked' : ''}`}
@@ -293,7 +296,7 @@ function CleaningSection({ today }) {
           title,
           completed: false,
           category: 'cleaning',
-          sort_order: i
+          order: i
         }))
       );
       fetchTasks();
@@ -354,7 +357,7 @@ function CleaningSection({ today }) {
           </motion.div>
 
           <div className="flex-col gap-2">
-            {[...(tasks || [])].sort((a, b) => a.sort_order - b.sort_order).map((task, i) => (
+            {[...(tasks || [])].sort((a, b) => a.order - b.order).map((task, i) => (
               <motion.div
                 key={task.id}
                 className={`checkbox-item ${task.completed ? 'checked' : ''}`}
